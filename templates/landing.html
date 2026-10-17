@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ link.meta_title or link.original_url }}</title>
+    <meta name="description" content="{{ link.meta_description or link.original_url }}" />
+
+    <!-- Open Graph / Social Messenger Preview Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ link.meta_title or link.original_url }}" />
+    <meta property="og:description" content="{{ link.meta_description or '단축 링크를 통해 대상 사이트로 이동합니다.' }}" />
+    <meta property="og:url" content="{{ link.short_url }}" />
+    {% if link.meta_image %}
+    <meta property="og:image" content="{{ link.meta_image }}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="{{ link.meta_image }}" />
+    {% else %}
+    <meta name="twitter:card" content="summary" />
+    {% endif %}
+    <meta name="twitter:title" content="{{ link.meta_title or link.original_url }}" />
+    <meta name="twitter:description" content="{{ link.meta_description or '단축 링크를 통해 대상 사이트로 이동합니다.' }}" />
+    {% if link.favicon_url %}
+    <link rel="icon" href="{{ link.favicon_url }}" />
+    {% endif %}
+
+    <!-- Zero-wait instant redirect via HTML meta refresh and JavaScript -->
+    <meta http-equiv="refresh" content="0; url={{ link.original_url }}" />
+    <script>
+        window.location.replace({{ link.original_url | tojson }});
+    </script>
+</head>
+<body style="background:#020617;color:#94a3b8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
+    <noscript>
+        <p><a href="{{ link.original_url }}" style="color:#818cf8;">대상 사이트로 이동하기 ({{ link.meta_title or link.original_url }})</a></p>
+    </noscript>
+</body>
+</html>

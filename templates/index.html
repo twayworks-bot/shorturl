@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShortURL - 스마트 URL 단축 & 메타 프리뷰 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="{{ base_prefix }}/static/style.css" />
+    <script>
+        window.BASE_PREFIX = {{ (base_prefix or "") | tojson }};
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+    <!-- Header -->
+    <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <a href="{{ base_prefix or '/' }}" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">ShortURL</span>
+                    <span class="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                        {{ base_prefix or "/" }}
+                    </span>
+                </div>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ base_prefix }}/docs" target="_blank" class="text-xs sm:text-sm px-3.5 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/70 transition flex items-center gap-1.5">
+                    <span>API 문서 (Swagger)</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+        <!-- Hero & Form Card -->
+        <section class="relative overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800 p-6 sm:p-8 shadow-2xl">
+            <div class="max-w-3xl">
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                    긴 URL을 단축 링크로 변환하고 프리뷰 메타정보를 함께 제공하세요
+                </h1>
+                <p class="mt-2 text-slate-400 text-sm sm:text-base">
+                    원본 URL을 입력하면 <code class="text-indigo-300 bg-indigo-950/60 px-1.5 py-0.5 rounded text-xs sm:text-sm" id="domain-preview">https://domain{{ base_prefix }}/{code}</code> 형태의 단축 링크가 생성됩니다. 공유 시 타겟 사이트 메타정보와 <strong>사용자 링크 설명 텍스트</strong>가 프리뷰로 노출되며, 클릭 시 <strong>기다림 없이 즉시 타겟 사이트로 전환</strong>됩니다. (기본 유효기간: 1년)
+                </p>
+            </div>
+
+            <form id="shorten-form" class="mt-6 space-y-4">
+                <div>
+                    <label for="original-url" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        원본 긴 URL (필수)
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input
+                            type="url"
+                            id="original-url"
+                            required
+                            placeholder="https://example.com/very/long/path?with=query&params=123"
+                            class="flex-1 rounded-xl bg-slate-950/90 border border-slate-700/80 px-4 py-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                        />
+                        <button
+                            type="submit"
+                            id="submit-btn"
+                            class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-semibold shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                        >
+                            <span id="submit-btn-text">단축 URL 생성</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Link Description Input -->
+                <div>
+                    <label for="custom-description" class="block text-xs font-medium text-slate-400 mb-1.5">
+                        사용자 링크 설명 텍스트 (선택, 입력 시 프리뷰 메타정보 설명란에 우선 반영됨)
+                    </label>
+                    <input
+                        type="text"
+                        id="custom-description"
+                        maxlength="500"
+                        placeholder="예: 2026년 신규 서비스 안내 페이지입니다 (비워두면 타겟 사이트 메타 설명 자동 사용)"
+                        class="w-full rounded-xl bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                </div>
+
+                <!-- Optional Settings -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label for="custom-alias" class="block text-xs font-medium text-slate-400 mb-1.5">
+                            사용자 지정 단축 코드 (선택, 3~32자 영문/숫자/-/_)
+                        </label>
+                        <div class="flex items-center rounded-xl bg-slate-950/90 border border-slate-800 focus-within:ring-2 focus-within:ring-indigo-500 overflow-hidden">
+                            <span id="host-prefix" class="pl-3.5 pr-1 text-slate-500 text-sm select-none">{{ base_prefix }}/</span>
+                            <input
+                                type="text"
+                                id="custom-alias"
+                                minlength="3"
+                                maxlength="32"
+                                pattern="^[a-zA-Z0-9_-]+$"
+                                placeholder="my-custom-link (비워두면 6자리 자동 생성)"
+                                class="w-full bg-transparent px-2 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="expires-at" class="block text-xs font-medium text-slate-400 mb-1.5">
+                            만료 일시 설정 (선택, 비워두면 생성 후 1년 뒤 자동 소멸)
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="expires-at"
+                            class="w-full rounded-xl bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                </div>
+
+                <!-- Error Banner -->
+                <div id="form-error" class="hidden rounded-xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 text-sm text-rose-300"></div>
+            </form>
+
+            <!-- Instant Result Banner -->
+            <div id="result-card" class="hidden mt-6 rounded-xl bg-indigo-950/40 border border-indigo-500/40 p-5">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="space-y-1.5 overflow-hidden w-full">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-indigo-300">생성 완료된 단축 URL (프리뷰 메타 포함 · 클릭 시 대기 없이 즉시 이동)</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <a id="result-short-url" href="#" target="_blank" class="text-lg sm:text-xl font-bold text-white hover:text-indigo-300 underline decoration-indigo-500/50 break-all"></a>
+                        </div>
+                        <p id="result-meta-title" class="text-sm font-semibold text-slate-200 truncate"></p>
+                        <p id="result-meta-desc" class="text-xs text-indigo-200/90 truncate"></p>
+                        <p id="result-original-url" class="text-xs text-slate-400 truncate"></p>
+                    </div>
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <button
+                            type="button"
+                            id="result-copy-btn"
+                            class="px-4 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <span>링크 복사</span>
+                        </button>
+                        <button
+                            type="button"
+                            id="result-qr-btn"
+                            class="px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium border border-slate-700 transition cursor-pointer"
+                        >
+                            QR 코드 보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Summary Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="rounded-xl bg-slate-900/70 border border-slate-800/90 p-5">
+                <span class="text-xs font-medium text-slate-400">총 생성된 단축 링크</span>
+                <p id="stat-total-links" class="text-2xl font-bold text-white mt-1">0</p>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 border border-slate-800/90 p-5">
+                <span class="text-xs font-medium text-slate-400">누적 총 클릭(리다이렉트) 수</span>
+                <p id="stat-total-clicks" class="text-2xl font-bold text-indigo-400 mt-1">0</p>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 border border-slate-800/90 p-5">
+                <span class="text-xs font-medium text-slate-400">활성 링크 수 (유효기간 내)</span>
+                <p id="stat-active-links" class="text-2xl font-bold text-emerald-400 mt-1">0</p>
+            </div>
+        </section>
+
+        <!-- URL List Table Section -->
+        <section class="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+            <div class="p-5 sm:p-6 border-b border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">단축 URL 목록 및 타겟 메타정보 관리</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">생성된 링크를 검색하고, 사용자 설명 수정, 타겟 사이트의 메타정보(제목, 설명, 이미지) 강제 갱신(리프레시) 또는 만료 링크 정리를 수행합니다.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <input
+                        type="search"
+                        id="search-input"
+                        placeholder="코드, URL, 사용자 설명, 메타 제목 검색..."
+                        class="rounded-lg bg-slate-950 border border-slate-800 px-3.5 py-2 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-64"
+                    />
+                    <button
+                        type="button"
+                        id="refresh-btn"
+                        class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm text-slate-200 border border-slate-700 transition whitespace-nowrap cursor-pointer"
+                    >
+                        목록 새로고침
+                    </button>
+                    <button
+                        type="button"
+                        id="purge-expired-btn"
+                        class="px-3.5 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-xs sm:text-sm text-amber-300 border border-amber-500/30 transition whitespace-nowrap cursor-pointer"
+                    >
+                        만료 링크 정리
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800/80 text-xs uppercase tracking-wider text-slate-400 bg-slate-950/40">
+                            <th class="py-3.5 px-4 sm:px-6">단축 링크</th>
+                            <th class="py-3.5 px-4">타겟 사이트 메타정보 & 사용자 링크 설명</th>
+                            <th class="py-3.5 px-4 text-center">클릭 수</th>
+                            <th class="py-3.5 px-4">생성일 / 만료일(1년)</th>
+                            <th class="py-3.5 px-4 sm:px-6 text-right">관리 (메타 리프레시)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="url-table-body" class="divide-y divide-slate-800/60 text-sm">
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-slate-500">데이터를 불러오는 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-white">단축 URL QR 코드</h3>
+                <button type="button" id="close-qr-modal" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded cursor-pointer">✕</button>
+            </div>
+            <div id="qr-container" class="bg-white p-4 rounded-xl inline-block mx-auto"></div>
+            <p id="qr-url-label" class="text-xs text-indigo-300 font-mono break-all"></p>
+            <div class="pt-2">
+                <button type="button" id="close-qr-btn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium transition cursor-pointer">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm text-white shadow-xl"></div>
+
+    <script src="{{ base_prefix }}/static/app.js"></script>
+</body>
+</html>

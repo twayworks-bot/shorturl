@@ -1,0 +1,125 @@
+# =====================================================================
+# 1. Python 캐시, 바이트코드 및 빌드 아티팩트
+# =====================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =====================================================================
+# 2. 가상환경 (Virtual Environments)
+# =====================================================================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+.python-version
+
+# =====================================================================
+# 3. 테스트, 커버리지 및 정적 분석 캐시
+# =====================================================================
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pyre/
+.pytype/
+cython_debug/
+
+# =====================================================================
+# 4. 데이터베이스 파일 및 영구 볼륨 데이터 (사용자 링크/개인정보 포함 방지)
+# =====================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+shorturl_data/
+db_data/
+backups/
+*.dump
+*.sql
+*.bak
+
+# =====================================================================
+# 5. 환경변수, 시크릿, 인증서 및 민감 데이터 (Sensitive & Personal Data)
+# =====================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+*secret*
+*credentials*
+*.token
+id_rsa*
+id_ed25519*
+
+# =====================================================================
+# 6. 로그 및 임시 파일
+# =====================================================================
+*.log
+logs/
+tmp/
+temp/
+scratch/
+
+# =====================================================================
+# 7. IDE, 에디터 및 OS 생성 파일
+# =====================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.gemini/
+
+# GitHub Sync Script & Private Configurations
+syncgithub.env
+syncgithub.py
